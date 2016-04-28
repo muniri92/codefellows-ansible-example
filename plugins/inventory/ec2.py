@@ -386,6 +386,8 @@ class Ec2Inventory(object):
                 error = self.get_auth_error_message()
             if not e.reason == "Forbidden":
                 error = "Looks like AWS RDS is down:\n%s" % e.message
+            else:
+                error = "Something nasty: \n%s" % e.message
             self.fail_with_error(error)
 
     def get_auth_error_message(self):
