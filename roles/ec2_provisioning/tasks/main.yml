@@ -15,7 +15,7 @@
   when: count > 0
   local_action:
     module: ec2
-    keypair: "{{ keypair }}"
+    key_name: "{{ keypair }}"
     group: "{{ security_group }}"
     instance_type: "{{ instance_type }}"
     image: "{{ ami }}"

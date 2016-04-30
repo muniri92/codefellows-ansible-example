@@ -9,12 +9,23 @@
     - python-pip
     - postgresql-client
     - libpq-dev
+    - libjpeg-dev
+    - libtiff5-dev
+    - libjpeg8-dev
+    - zlib1g-dev
+    - libfreetype6-dev
+    - liblcms2-dev
+    - libwebp-dev
+    - tcl8.6-dev
+    - tk8.6-dev
+    - python-tk
     - python-pip
     - python-psycopg2
     - git
 
 - name: Clone Django Repository
-  git: repo=https://github.com/cewing/djangoblog_uwpce.git dest={{ django_home }} force=yes
+  sudo: yes
+  git: repo=https://github.com/muniri92/django-imager.git dest={{ django_home }} force=yes
 
 - name: Install Python Dependencies
   sudo: yes
@@ -34,18 +45,60 @@
   set_fact: 
     db_url: "{{ db_host.ec2_engine }}://{{ db_host.ec2_master_username }}:{{ db_password }}@{{ db_host.ec2__address }}:{{ db_host.ec2__port }}/{{ db_host.ec2_DBName }}"
 
+- name: Run Cache
+  environment:
+    DATABASE_URL: "{{ db_url }}"
+  django_manage:
+    app_path: "{{ django_home }}/imagersite"
+    settings: imagersite.settings
+    cache_table: image_cache_table
+    command: createcachetable
+
+- name: Migrate Thumbnail
+  sudo: yes
+  environment:
+    DATABASE_URL: "{{ db_url }}"
+  django_manage:
+    app_path: "{{ django_home }}/imagersite"
+    settings: imagersite.settings
+    command: makemigrations thumbnail
+
+- name: Run Thumbnail Migrations
+  environment:
+    DATABASE_URL: "{{ db_url }}"
+  django_manage:
+    app_path: "{{ django_home }}/imagersite"
+    settings: imagersite.settings
+    command: migrate thumbnail
+
 - name: Run Migrations
   environment:
     DATABASE_URL: "{{ db_url }}"
   django_manage:
-    app_path: "{{ django_home }}"
-    settings: mysite.production
+    app_path: "{{ django_home }}/imagersite"
+    settings: imagersite.production
     command: migrate
 
 - name: Collect Static Files
   environment:
     DATABASE_URL: "{{ db_url }}"
   django_manage:
-    app_path: "{{ django_home }}"
-    settings: mysite.production
+    app_path: "{{ django_home }}/imagersite"
+    settings: imagersite.production
     command: collectstatic
+
+- name: make group
+  sudo: yes
+  group: name=django_group system=yes
+
+- name: make user
+  sudo: yes
+  user: name=django system=yes group=django_group
+
+- name: setup Media
+  sudo: yes
+  file: path={{ django_home }}/imagersite/media state=directory recurse=yes mode=0775 owner=django group=django_group
+
+
+
+

@@ -9,7 +9,6 @@
     - role: django
     - role: gunicorn
     - role: jdauphant.nginx
-      sudo: yes
       nginx_sites: 
         default:
           - listen 80
@@ -21,5 +20,6 @@
               proxy_set_header X-Real-IP $remote_addr;
               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             }
-          - location /static/ { root {{ django_home }}; }
+          - location /static/ { root {{ django_home }}/imagersite; }
+          - location /media/ { root {{ django_home}}/imagersite; }
 
